@@ -6,7 +6,7 @@ module.exports = {
   showCode: true,
   showUsage: true,
   showSidebar: false,
-  serverPort: 8080,
+  serverPort: 8081,
   sections: [
     {
       content: 'README.md'

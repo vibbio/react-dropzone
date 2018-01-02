@@ -1,6 +1,15 @@
 Dropzone with default properties and displays list of the dropped files.
 
 ```
+const Test = props => (
+  <button
+    onClick={props.onClickFunction}
+    className="test test "
+   >
+    Klikker her
+   </button>
+ );
+    
 class Basic extends React.Component {
   constructor() {
     super()
@@ -14,10 +23,21 @@ class Basic extends React.Component {
   }
 
   render() {
+  
+
     return (
       <section>
         <div className="dropzone">
-          <Dropzone onDrop={this.onDrop.bind(this)}>
+          <Dropzone
+            onDrop={this.onDrop.bind(this)}
+            disableClick
+            onDrop={(accepted, rejected) => { this.setState({ accepted, rejected }); }}
+            openFileDialog={Test}
+            openFileDialogProps={{
+                  className: "test classname",
+                  type: "submit"
+                }}
+          >
             <p>Try dropping some files here, or click to select files to upload.</p>
           </Dropzone>
         </div>

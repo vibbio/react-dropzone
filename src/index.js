@@ -267,6 +267,10 @@ class Dropzone extends React.Component {
     this.fileInputEl.click()
   }
 
+  disableDropZone() {}
+
+  enableDropZone() {}
+
   renderChildren = (children, isDragActive, isDragAccept, isDragReject) => {
     if (typeof children === 'function') {
       return children({
@@ -391,14 +395,30 @@ class Dropzone extends React.Component {
       'maxSize',
       'minSize'
     ]
+    let OpenFileDialog
+    let openFileDialogProps
+    if (props.openFileDialog) {
+      OpenFileDialog = props.openFileDialog.bind({})
+      openFileDialogProps = { ...props.openFileDialogProps }
+
+      console.log('props.openFileDialogProps: ', props.openFileDialogProps)
+
+      delete props.openFileDialog
+      delete props.openFileDialogProps
+      // customProps.forEach(prop => delete props[prop])
+    }
     const divProps = { ...props }
+
     customProps.forEach(prop => delete divProps[prop])
 
+    console.log('openFileDialogProps', openFileDialogProps)
     return (
       <div
         className={className}
         style={appliedStyle}
-        {...divProps /* expand user provided props first so event handlers are never overridden */}
+        {
+          ...divProps /* expand user provided props first so event handlers are never overridden */
+        }
         onClick={this.composeHandlers(this.onClick)}
         onDragStart={this.composeHandlers(this.onDragStart)}
         onDragEnter={this.composeHandlers(this.onDragEnter)}
@@ -409,8 +429,15 @@ class Dropzone extends React.Component {
         aria-disabled={disabled}
       >
         {this.renderChildren(children, isDragActive, isDragAccept, isDragReject)}
+        {OpenFileDialog && (
+          <div className="open-file-dialog">
+            <OpenFileDialog onClickFunction={() => this.open()} />
+          </div>
+        )}
         <input
-          {...inputProps /* expand user provided inputProps first so inputAttributes override them */}
+          {
+            ...inputProps /* expand user provided inputProps first so inputAttributes override them */
+          }
           {...inputAttributes}
         />
       </div>
@@ -436,13 +463,24 @@ Dropzone.propTypes = {
   children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
 
   /**
+   * Contains specific area for opening file handler
+   */
+  openFileDialog: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+  /**
+   * Contains props for the file dialog opener
+   */
+
+  openFileDialogProps: PropTypes.object,
+
+  /**
    * Disallow clicking on the dropzone container to open file dialog
    */
   disableClick: PropTypes.bool,
 
   /**
- * Enable/disable the dropzone entirely
- */
+   * Enable/disable the dropzone entirely
+   */
   disabled: PropTypes.bool,
 
   /**
