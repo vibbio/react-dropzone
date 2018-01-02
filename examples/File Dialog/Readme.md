@@ -10,6 +10,15 @@ let dropzoneRef;
   <button type="button" onClick={() => { dropzoneRef.open() }}>
       Open File Dialog
   </button>
+  
+  <button type="button" onClick={() => { dropzoneRef.disableDropZone() }}>
+      Disable dropzone
+  </button>
+   
+     
+  <button type="button" onClick={() => { dropzoneRef.enableDropZone() }}>
+      Enable dropzone
+  </button>
 </div>
 ```
 

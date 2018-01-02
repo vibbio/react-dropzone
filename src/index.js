@@ -14,24 +14,27 @@ import styles from './utils/styles'
 
 class Dropzone extends React.Component {
   constructor(props, context) {
-    super(props, context)
-    this.composeHandlers = this.composeHandlers.bind(this)
-    this.onClick = this.onClick.bind(this)
-    this.onDocumentDrop = this.onDocumentDrop.bind(this)
-    this.onDragEnter = this.onDragEnter.bind(this)
-    this.onDragLeave = this.onDragLeave.bind(this)
-    this.onDragOver = this.onDragOver.bind(this)
-    this.onDragStart = this.onDragStart.bind(this)
-    this.onDrop = this.onDrop.bind(this)
-    this.onFileDialogCancel = this.onFileDialogCancel.bind(this)
-    this.onInputElementClick = this.onInputElementClick.bind(this)
+    super(props, context);
+    this.composeHandlers = this.composeHandlers.bind(this);
+    this.onClick = this.onClick.bind(this);
+    this.onDocumentDrop = this.onDocumentDrop.bind(this);
+    this.onDragEnter = this.onDragEnter.bind(this);
+    this.onDragLeave = this.onDragLeave.bind(this);
+    this.onDragOver = this.onDragOver.bind(this);
+    this.onDragStart = this.onDragStart.bind(this);
+    this.onDrop = this.onDrop.bind(this);
+    this.disableDropZone = this.disableDropZone.bind(this);
+    this.enableDropZone = this.enableDropZone.bind(this);
+    this.onFileDialogCancel = this.onFileDialogCancel.bind(this);
+    this.onInputElementClick = this.onInputElementClick.bind(this);
 
-    this.setRef = this.setRef.bind(this)
-    this.setRefs = this.setRefs.bind(this)
+    this.setRef = this.setRef.bind(this);
+    this.setRefs = this.setRefs.bind(this);
 
-    this.isFileDialogActive = false
+    this.isFileDialogActive = false;
 
     this.state = {
+      disabled: false,
       draggedFiles: [],
       acceptedFiles: [],
       rejectedFiles: []
@@ -39,22 +42,22 @@ class Dropzone extends React.Component {
   }
 
   componentDidMount() {
-    const { preventDropOnDocument } = this.props
-    this.dragTargets = []
+    const { preventDropOnDocument } = this.props;
+    this.dragTargets = [];
 
     if (preventDropOnDocument) {
-      document.addEventListener('dragover', onDocumentDragOver, false)
+      document.addEventListener('dragover', onDocumentDragOver, false);
       document.addEventListener('drop', this.onDocumentDrop, false)
     }
-    this.fileInputEl.addEventListener('click', this.onInputElementClick, false)
+    this.fileInputEl.addEventListener('click', this.onInputElementClick, false);
     // Tried implementing addEventListener, but didn't work out
     document.body.onfocus = this.onFileDialogCancel
   }
 
   componentWillUnmount() {
-    const { preventDropOnDocument } = this.props
+    const { preventDropOnDocument } = this.props;
     if (preventDropOnDocument) {
-      document.removeEventListener('dragover', onDocumentDragOver)
+      document.removeEventListener('dragover', onDocumentDragOver);
       document.removeEventListener('drop', this.onDocumentDrop)
     }
     if (this.fileInputEl != null) {
@@ -67,7 +70,7 @@ class Dropzone extends React.Component {
   }
 
   composeHandlers(handler) {
-    if (this.props.disabled) {
+    if (this.state.disabled || this.props.disabled) {
       return null
     }
 
@@ -79,7 +82,7 @@ class Dropzone extends React.Component {
       // if we intercepted an event for our instance, let it propagate down to the instance's onDrop handler
       return
     }
-    evt.preventDefault()
+    evt.preventDefault();
     this.dragTargets = []
   }
 
@@ -90,7 +93,7 @@ class Dropzone extends React.Component {
   }
 
   onDragEnter(evt) {
-    evt.preventDefault()
+    evt.preventDefault();
 
     // Count the dropzone and any children that are entered.
     if (this.dragTargets.indexOf(evt.target) === -1) {
@@ -100,7 +103,7 @@ class Dropzone extends React.Component {
     this.setState({
       isDragActive: true, // Do not rely on files for the drag state. It doesn't work in Safari.
       draggedFiles: getDataTransferItems(evt)
-    })
+    });
 
     if (this.props.onDragEnter) {
       this.props.onDragEnter.call(this, evt)
@@ -109,8 +112,8 @@ class Dropzone extends React.Component {
 
   onDragOver(evt) {
     // eslint-disable-line class-methods-use-this
-    evt.preventDefault()
-    evt.stopPropagation()
+    evt.preventDefault();
+    evt.stopPropagation();
     try {
       evt.dataTransfer.dropEffect = 'copy' // eslint-disable-line no-param-reassign
     } catch (err) {
@@ -124,10 +127,10 @@ class Dropzone extends React.Component {
   }
 
   onDragLeave(evt) {
-    evt.preventDefault()
+    evt.preventDefault();
 
     // Only deactivate once the dropzone and all children have been left.
-    this.dragTargets = this.dragTargets.filter(el => el !== evt.target && this.node.contains(el))
+    this.dragTargets = this.dragTargets.filter(el => el !== evt.target && this.node.contains(el));
     if (this.dragTargets.length > 0) {
       return
     }
@@ -136,7 +139,7 @@ class Dropzone extends React.Component {
     this.setState({
       isDragActive: false,
       draggedFiles: []
-    })
+    });
 
     if (this.props.onDragLeave) {
       this.props.onDragLeave.call(this, evt)
@@ -144,17 +147,17 @@ class Dropzone extends React.Component {
   }
 
   onDrop(evt) {
-    const { onDrop, onDropAccepted, onDropRejected, multiple, disablePreview, accept } = this.props
-    const fileList = getDataTransferItems(evt)
-    const acceptedFiles = []
-    const rejectedFiles = []
+    const { onDrop, onDropAccepted, onDropRejected, multiple, disablePreview, accept } = this.props;
+    const fileList = getDataTransferItems(evt);
+    const acceptedFiles = [];
+    const rejectedFiles = [];
 
     // Stop default browser behavior
-    evt.preventDefault()
+    evt.preventDefault();
 
     // Reset the counter along with the drag on a drop.
-    this.dragTargets = []
-    this.isFileDialogActive = false
+    this.dragTargets = [];
+    this.isFileDialogActive = false;
 
     fileList.forEach(file => {
       if (!disablePreview) {
@@ -175,7 +178,7 @@ class Dropzone extends React.Component {
       } else {
         rejectedFiles.push(file)
       }
-    })
+    });
 
     if (!multiple) {
       // if not in multi mode add any extra accepted files to rejected.
@@ -196,7 +199,7 @@ class Dropzone extends React.Component {
     }
 
     // Clear files value
-    this.draggedFiles = null
+    this.draggedFiles = null;
 
     // Reset drag state
     this.setState({
@@ -208,9 +211,9 @@ class Dropzone extends React.Component {
   }
 
   onClick(evt) {
-    const { onClick, disableClick } = this.props
+    const { onClick, disableClick } = this.props;
     if (!disableClick) {
-      evt.stopPropagation()
+      evt.stopPropagation();
 
       if (onClick) {
         onClick.call(this, evt)
@@ -224,7 +227,7 @@ class Dropzone extends React.Component {
   }
 
   onInputElementClick(evt) {
-    evt.stopPropagation()
+    evt.stopPropagation();
     if (this.props.inputProps && this.props.inputProps.onClick) {
       this.props.inputProps.onClick()
     }
@@ -232,17 +235,17 @@ class Dropzone extends React.Component {
 
   onFileDialogCancel() {
     // timeout will not recognize context of this method
-    const { onFileDialogCancel } = this.props
-    const { fileInputEl } = this
-    let { isFileDialogActive } = this
+    const { onFileDialogCancel } = this.props;
+    const { fileInputEl } = this;
+    let { isFileDialogActive } = this;
     // execute the timeout only if the onFileDialogCancel is defined and FileDialog
     // is opened in the browser
     if (onFileDialogCancel && isFileDialogActive) {
       setTimeout(() => {
         // Returns an object as FileList
-        const FileList = fileInputEl.files
+        const FileList = fileInputEl.files;
         if (!FileList.length) {
-          isFileDialogActive = false
+          isFileDialogActive = false;
           onFileDialogCancel()
         }
       }, 300)
@@ -262,14 +265,18 @@ class Dropzone extends React.Component {
    * @public
    */
   open() {
-    this.isFileDialogActive = true
-    this.fileInputEl.value = null
+    this.isFileDialogActive = true;
+    this.fileInputEl.value = null;
     this.fileInputEl.click()
   }
 
-  disableDropZone() {}
+  disableDropZone() {
+    this.setState({ ...this.state, disabled: true })
+  }
 
-  enableDropZone() {}
+  enableDropZone() {
+    this.setState({ ...this.state, disabled: false })
+  }
 
   renderChildren = (children, isDragActive, isDragAccept, isDragReject) => {
     if (typeof children === 'function') {
@@ -281,7 +288,7 @@ class Dropzone extends React.Component {
       })
     }
     return children
-  }
+  };
 
   render() {
     const {
@@ -296,7 +303,7 @@ class Dropzone extends React.Component {
       name,
       rejectClassName,
       ...rest
-    } = this.props
+    } = this.props;
 
     let {
       acceptStyle,
@@ -306,16 +313,16 @@ class Dropzone extends React.Component {
       rejectStyle,
       style,
       ...props // eslint-disable-line prefer-const
-    } = rest
+    } = rest;
 
-    const { isDragActive, draggedFiles } = this.state
-    const filesCount = draggedFiles.length
-    const isMultipleAllowed = multiple || filesCount <= 1
-    const isDragAccept = filesCount > 0 && allFilesAccepted(draggedFiles, this.props.accept)
-    const isDragReject = filesCount > 0 && (!isDragAccept || !isMultipleAllowed)
-    className = className || ''
+    const { isDragActive, draggedFiles } = this.state;
+    const filesCount = draggedFiles.length;
+    const isMultipleAllowed = multiple || filesCount <= 1;
+    const isDragAccept = filesCount > 0 && allFilesAccepted(draggedFiles, this.props.accept);
+    const isDragReject = filesCount > 0 && (!isDragAccept || !isMultipleAllowed);
+    className = className || '';
     const noStyles =
-      !className && !style && !activeStyle && !acceptStyle && !rejectStyle && !disabledStyle
+      !className && !style && !activeStyle && !acceptStyle && !rejectStyle && !disabledStyle;
 
     if (isDragActive && activeClassName) {
       className += ' ' + activeClassName
@@ -326,19 +333,19 @@ class Dropzone extends React.Component {
     if (isDragReject && rejectClassName) {
       className += ' ' + rejectClassName
     }
-    if (disabled && disabledClassName) {
+    if ((disabled || this.state.disabled) && disabledClassName) {
       className += ' ' + disabledClassName
     }
 
     if (noStyles) {
-      style = styles.default
-      activeStyle = styles.active
-      acceptStyle = style.active
-      rejectStyle = styles.rejected
+      style = styles.default;
+      activeStyle = styles.active;
+      acceptStyle = style.active;
+      rejectStyle = styles.rejected;
       disabledStyle = styles.disabled
     }
 
-    let appliedStyle = { ...style }
+    let appliedStyle = { ...style };
     if (activeStyle && isDragActive) {
       appliedStyle = {
         ...style,
@@ -357,7 +364,7 @@ class Dropzone extends React.Component {
         ...rejectStyle
       }
     }
-    if (disabledStyle && disabled) {
+    if (disabledStyle && (disabled || this.state.disabled)) {
       appliedStyle = {
         ...style,
         ...disabledStyle
@@ -373,7 +380,7 @@ class Dropzone extends React.Component {
       ref: this.setRefs,
       onChange: this.onDrop,
       autoComplete: 'off'
-    }
+    };
 
     if (name && name.length) {
       inputAttributes.name = name
@@ -394,24 +401,20 @@ class Dropzone extends React.Component {
       'onFileDialogCancel',
       'maxSize',
       'minSize'
-    ]
-    let OpenFileDialog
-    let openFileDialogProps
+    ];
+    let OpenFileDialog;
+    let openFileDialogProps;
     if (props.openFileDialog) {
-      OpenFileDialog = props.openFileDialog.bind({})
-      openFileDialogProps = { ...props.openFileDialogProps }
+      OpenFileDialog = props.openFileDialog.bind({});
+      openFileDialogProps = { ...props.openFileDialogProps };
 
-      console.log('props.openFileDialogProps: ', props.openFileDialogProps)
-
-      delete props.openFileDialog
+      delete props.openFileDialog;
       delete props.openFileDialogProps
-      // customProps.forEach(prop => delete props[prop])
     }
-    const divProps = { ...props }
+    const divProps = { ...props };
 
-    customProps.forEach(prop => delete divProps[prop])
+    customProps.forEach(prop => delete divProps[prop]);
 
-    console.log('openFileDialogProps', openFileDialogProps)
     return (
       <div
         className={className}
@@ -426,7 +429,7 @@ class Dropzone extends React.Component {
         onDragLeave={this.composeHandlers(this.onDragLeave)}
         onDrop={this.composeHandlers(this.onDrop)}
         ref={this.setRef}
-        aria-disabled={disabled}
+        aria-disabled={(disabled || this.state.disabled)}
       >
         {this.renderChildren(children, isDragActive, isDragAccept, isDragReject)}
         {OpenFileDialog && (
@@ -612,8 +615,18 @@ Dropzone.propTypes = {
   /**
    * Provide a callback on clicking the cancel button of the file dialog
    */
-  onFileDialogCancel: PropTypes.func
-}
+  onFileDialogCancel: PropTypes.func,
+
+  /**
+   * Function for disabling dropzone
+   */
+  disableDropZone: PropTypes.func,
+
+  /**
+   * Function for enabling dropzone
+   */
+  enableDropZone: PropTypes.func
+};
 
 Dropzone.defaultProps = {
   preventDropOnDocument: true,
@@ -623,4 +636,4 @@ Dropzone.defaultProps = {
   multiple: true,
   maxSize: Infinity,
   minSize: 0
-}
+};
